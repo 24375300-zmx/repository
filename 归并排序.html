@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>归并排序详细步骤演示</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 18px;
+            padding: 28px;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.22);
+        }
+        h2 {
+            color: #2d3748;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 24px;
+            font-size: 26px;
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .speed-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #edf2f7;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+        .speed-box label {
+            font-weight: 500;
+            color: #2d3748;
+        }
+        #speedRange {
+            width: 140px;
+        }
+        button {
+            padding: 12px 26px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 9px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        #sortBtn {
+            background: #38a169;
+            color: white;
+        }
+        #sortBtn:disabled {
+            background: #9ae6b4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        #resetBtn {
+            background: #e53e3e;
+            color: white;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.18);
+        }
+        .step-info {
+            background: #ebf8ff;
+            padding: 16px 20px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+            font-size: 17px;
+            line-height: 1.7;
+            border-left: 5px solid #3182ce;
+            color: #2c5282;
+        }
+        .arrays-container {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 22px;
+            margin-bottom: 24px;
+        }
+        .array-section {
+            flex: 1;
+            min-width: 260px;
+            background: #f7fafc;
+            padding: 18px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+        }
+        .section-title {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 12px;
+            text-align: center;
+            font-size: 19px;
+        }
+        .array {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            min-height: 65px;
+            padding: 12px;
+            background: #ffffff;
+            border-radius: 10px;
+        }
+        .item {
+            width: 54px;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            font-weight: bold;
+            border-radius: 9px;
+            transition: all 0.45s ease;
+        }
+        .original { background: #e9ecef; color: #343a40; }
+        .left { background: #cce5ff; color: #003366; }
+        .right { background: #d4edda; color: #0f5132; }
+        .merged { background: #fff3cd; color: #744210; }
+        .comparing {
+            background: #dc3545 !important;
+            color: #fff !important;
+            transform: scale(1.22);
+            box-shadow: 0 0 18px rgba(220, 53, 69, 0.75);
+            z-index: 10;
+        }
+        .sorted {
+            background: #28a745 !important;
+            color: #fff !important;
+        }
+        .array-wrapper {
+            position: relative;
+            margin: 10px 0;
+            padding-bottom: 32px;
+        }
+        .pointer {
+            position: absolute;
+            bottom: 0;
+            left: -100px;
+            font-size: 26px;
+            transition: left 0.45s ease;
+            color: #c53030;
+        }
+        .log {
+            background: #1a202c;
+            color: #f7fafc;
+            padding: 18px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+        .log::-webkit-scrollbar {
+            width: 6px;
+        }
+        .log::-webkit-scrollbar-thumb {
+            background: #718096;
+            border-radius: 3px;
+        }
+        .log-title {
+            color: #ffd43b;
+            font-weight: bold;
+            margin-bottom: 12px;
+            font-size: 17px;
+        }
+        .log-entry {
+            margin: 6px 0;
+            padding: 6px 12px;
+            border-left: 3px solid #38b2ac;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📊 归并排序完整步骤可视化演示</h2>
+
+        <div class="controls">
+            <button id="sortBtn" onclick="startSort()">开始排序</button>
+            <button id="resetBtn" onclick="resetArray()">重置数组</button>
+            <div class="speed-box">
+                <label>动画速度：</label>
+                <input type="range" id="speedRange" min="200" max="1500" value="800" step="100">
+                <span id="speedText">800ms</span>
+            </div>
+        </div>
+
+        <div class="step-info" id="stepInfo">
+            点击「开始排序」按钮，完整观看归并排序分治分割、两两合并全过程，拖动滑块调节动画速度
+        </div>
+
+        <div class="arrays-container">
+            <div class="array-section">
+                <div class="section-title">原始数组</div>
+                <div class="array" id="originalArray"></div>
+            </div>
+
+            <div class="array-section">
+                <div class="section-title">左子数组</div>
+                <div class="array-wrapper">
+                    <div class="array" id="leftArray"></div>
+                    <div class="pointer" id="leftPointer">👆</div>
+                </div>
+            </div>
+
+            <div class="array-section">
+                <div class="section-title">右子数组</div>
+                <div class="array-wrapper">
+                    <div class="array" id="rightArray"></div>
+                    <div class="pointer" id="rightPointer">👆</div>
+                </div>
+            </div>
+
+            <div class="array-section">
+                <div class="section-title">合并结果区</div>
+                <div class="array" id="mergedArray"></div>
+            </div>
+        </div>
+
+        <div class="log">
+            <div class="log-title">📝 实时操作日志</div>
+            <div id="logContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let originalArr = [5, 2, 9, 1, 5, 6, 3];
+        let stepDelay = 800;
+        let isSorting = false;
+
+        // 速度滑块绑定
+        const speedRange = document.getElementById('speedRange');
+        const speedText = document.getElementById('speedText');
+        speedRange.addEventListener('input', function() {
+            stepDelay = Number(this.value);
+            speedText.textContent = stepDelay + 'ms';
+        })
+
+        window.onload = function() {
+            renderOriginalArray();
+            resetLog();
+        };
+
+        function renderOriginalArray() {
+            const container = document.getElementById('originalArray');
+            container.innerHTML = '';
+            originalArr.forEach(num => {
+                const div = document.createElement('div');
+                div.className = 'item original';
+                div.textContent = num;
+                container.appendChild(div);
+            });
+        }
+
+        function resetArray() {
+            if (isSorting) return;
+            originalArr = [5, 2, 9, 1, 5, 6, 3];
+            renderOriginalArray();
+            clearArrays();
+            document.getElementById('stepInfo').innerHTML =
+                '数组已重置完毕，拖动滑块调整速度后点击「开始排序」';
+            resetLog();
+        }
+
+        function clearArrays() {
+            document.getElementById('leftArray').innerHTML = '';
+            document.getElementById('rightArray').innerHTML = '';
+            document.getElementById('mergedArray').innerHTML = '';
+            document.getElementById('leftPointer').style.left = '-100px';
+            document.getElementById('rightPointer').style.left = '-100px';
+            clearHighlights();
+        }
+
+        function resetLog() {
+            document.getElementById('logContent').innerHTML =
+                '<div class="log-entry">系统就绪，等待启动归并排序...</div>';
+        }
+
+        function addLog(message) {
+            const logContent = document.getElementById('logContent');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = message;
+            logContent.appendChild(entry);
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+
+        async function startSort() {
+            if (isSorting) return;
+            isSorting = true;
+            document.getElementById('sortBtn').disabled = true;
+
+            clearArrays();
+            addLog('========== 归并排序流程启动 ==========');
+
+            const sorted = await mergeSort([...originalArr], 0, originalArr.length - 1);
+
+            document.getElementById('stepInfo').innerHTML =
+                `<strong>✅ 排序全部完成！</strong> 有序数组：[${sorted.join(', ')}]`;
+            addLog(`✅ 排序结束，最终有序数组：[${sorted.join(', ')}]`);
+
+            // 全部标绿
+            const mergedItems = document.querySelectorAll('#mergedArray .item');
+            mergedItems.forEach(item => item.classList.add('sorted'));
+
+            document.getElementById('sortBtn').disabled = false;
+            isSorting = false;
+        }
+
+        async function mergeSort(arr, l, r) {
+            if (l >= r) return [arr[l]];
+            const mid = Math.floor((l + r) / 2);
+            const sliceAll = arr.slice(l, r + 1);
+            const sliceL = arr.slice(l, mid + 1);
+            const sliceR = arr.slice(mid + 1, r + 1);
+
+            document.getElementById('stepInfo').innerHTML =
+                `分治分割：当前区间 [${sliceAll.join(', ')}] <br> 左半段 [${sliceL.join(', ')}]，右半段 [${sliceR.join(', ')}]`;
+            addLog(`分割：[${sliceAll.join(', ')}] 拆分为 左[${sliceL.join(', ')}] 右[${sliceR.join(', ')}]`);
+            await sleep(stepDelay);
+
+            const leftSorted = await mergeSort(arr, l, mid);
+            const rightSorted = await mergeSort(arr, mid + 1, r);
+
+            return await merge(leftSorted, rightSorted);
+        }
+
+        async function merge(left, right) {
+            renderSubArray('leftArray', left, 'left');
+            renderSubArray('rightArray', right, 'right');
+            renderSubArray('mergedArray', [], 'merged');
+            await sleep(stepDelay);
+
+            const res = [];
+            let i = 0, j = 0;
+            const leftLen = left.length;
+            const rightLen = right.length;
+
+            while (i < leftLen && j < rightLen) {
+                clearHighlights();
+                highlightComparing('leftArray', i, 'left');
+                highlightComparing('rightArray', j, 'right');
+
+                const a = left[i], b = right[j];
+                document.getElementById('stepInfo').innerHTML =
+                    `元素对比：左指针=${a}  VS  右指针=${b}，选取较小值 ${Math.min(a, b)} 存入合并数组`;
+                addLog(`对比 ${a} 和 ${b}，存入 ${Math.min(a, b)}`);
+                await sleep(stepDelay);
+
+                if (a <= b) {
+                    res.push(a);
+                    i++;
+                } else {
+                    res.push(b);
+                    j++;
+                }
+                renderSubArray('mergedArray', res, 'merged');
+                updatePointerLocation(i - 1, j - 1);
+                await sleep(stepDelay / 2);
+            }
+
+            // 剩余左数组
+            while (i < leftLen) {
+                clearHighlights();
+                document.getElementById('stepInfo').innerHTML = `左数组剩余元素，追加 ${left[i]}`;
+                addLog(`左数组剩余，直接追加 ${left[i]}`);
+                res.push(left[i]);
+                i++;
+                renderSubArray('mergedArray', res, 'merged');
+                updatePointerLocation(i - 1, j - 1);
+                await sleep(stepDelay / 2);
+            }
+            // 剩余右数组
+            while (j < rightLen) {
+                clearHighlights();
+                document.getElementById('stepInfo').innerHTML = `右数组剩余元素，追加 ${right[j]}`;
+                addLog(`右数组剩余，直接追加 ${right[j]}`);
+                res.push(right[j]);
+                j++;
+                renderSubArray('mergedArray', res, 'merged');
+                updatePointerLocation(i - 1, j - 1);
+                await sleep(stepDelay / 2);
+            }
+            clearHighlights();
+            return res;
+        }
+
+        function renderSubArray(boxId, arr, cls) {
+            const box = document.getElementById(boxId);
+            box.innerHTML = '';
+            arr.forEach(num => {
+                const div = document.createElement('div');
+                div.className = `item ${cls}`;
+                div.textContent = num;
+                box.appendChild(div);
+            })
+        }
+
+        function highlightComparing(boxId, idx, type) {
+            const box = document.getElementById(boxId);
+            const items = box.querySelectorAll('.item');
+            items.forEach(el => el.classList.remove('comparing'));
+            if (items[idx]) items[idx].classList.add('comparing');
+            updatePointerLocation(idx, j = null, type);
+        }
+
+        function updatePointerLocation(iIdx, jIdx, forceType = null) {
+            const leftBox = document.getElementById('leftArray');
+            const rightBox = document.getElementById('rightArray');
+            const leftItems = leftBox.querySelectorAll('.item');
+            const rightItems = rightBox.querySelectorAll('.item');
+            const leftPoint = document.getElementById('leftPointer');
+            const rightPoint = document.getElementById('rightPointer');
+
+            // 更新左指针
+            if (leftItems[iIdx]) {
+                const item = leftItems[iIdx];
+                const itemX = item.offsetLeft + item.offsetWidth / 2 - 13;
+                leftPoint.style.left = itemX + 'px';
+            } else {
+                leftPoint.style.left = '-100px';
+            }
+            // 更新右指针
+            if (rightItems[jIdx]) {
+                const item = rightItems[jIdx];
+                const itemX = item.offsetLeft + item.offsetWidth / 2 - 13;
+                rightPoint.style.left = itemX + 'px';
+            } else {
+                rightPoint.style.left = '-100px';
+            }
+        }
+
+        function clearHighlights() {
+            document.querySelectorAll('.item.comparing').forEach(el => {
+                el.classList.remove('comparing');
+            })
+        }
+
+        function sleep(ms) {
+            return new Promise(res => setTimeout(res, ms));
+        }
+    </script>
+</body>
+</html>
