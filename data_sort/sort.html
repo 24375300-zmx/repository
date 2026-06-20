@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MergeSort 分步可视化演示</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(120deg, #4856b3, #8042a8);
+            margin: 0;
+            padding: 24px;
+            min-height: 100vh;
+        }
+        .wrap-box {
+            max-width: 1240px;
+            margin: 0 auto;
+            background: #fffffffa;
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22);
+        }
+        h2 {
+            text-align: center;
+            color: #222;
+            margin-top: 0;
+            margin-bottom: 24px;
+        }
+        .btn-group {
+            text-align: center;
+            margin-bottom: 22px;
+        }
+        .btn-group button {
+            padding: 13px 26px;
+            font-size: 16px;
+            margin: 0 12px;
+            border: 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        #runBtn {
+            background-color: #36aa58;
+            color: #fff;
+        }
+        #resetCtrl {
+            background-color: #e04343;
+            color: #fff;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.18);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .state-tip {
+            background: #d7eaff;
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+        .grid-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 22px;
+            justify-content: space-between;
+        }
+        .single-block {
+            flex: 1;
+            min-width: 310px;
+            background: #f6f7f9;
+            border: 2px solid #d1d5db;
+            border-radius: 12px;
+            padding: 18px;
+        }
+        .block-title {
+            text-align: center;
+            font-weight: 600;
+            color: #374151;
+            font-size: 19px;
+            margin: 0 0 12px;
+        }
+        .array-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            justify-content: center;
+            min-height: 64px;
+            padding: 12px;
+            background: #fff;
+            border-radius: 10px;
+        }
+        .item-cell {
+            width: 52px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            font-weight: 600;
+            border-radius: 9px;
+            transition: all 0.4s ease;
+        }
+        .ori-cell {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        .left-cell {
+            background: #bfdbfe;
+            color: #1e40af;
+        }
+        .right-cell {
+            background: #bbf7d0;
+            color: #15803d;
+        }
+        .merge-cell {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .active-compare {
+            background: #ef4444 !important;
+            color: white !important;
+            transform: scale(1.22);
+            box-shadow: 0 0 16px rgba(239, 68, 68, 0.65);
+        }
+        .final-sort {
+            background: #22c55e !important;
+            color: white !important;
+        }
+        .arr-holder {
+            position: relative;
+            margin-top: 12px;
+        }
+        .arrow-mark {
+            position: absolute;
+            bottom: -28px;
+            font-size: 26px;
+            transition: left 0.4s ease;
+        }
+        .log-container {
+            margin-top: 26px;
+            background: #111827;
+            color: #f3f4f6;
+            padding: 18px;
+            border-radius: 10px;
+            max-height: 210px;
+            overflow-y: auto;
+            font-family: "Consolas", monospace;
+        }
+        .log-head {
+            color: #facc15;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .log-line {
+            margin: 6px 0;
+            padding-left: 12px;
+            border-left: 3px solid #22d3ee;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap-box">
+        <h2>归并排序分步可视化演示</h2>
+
+        <div class="btn-group">
+            <button id="runBtn">开始排序演示</button>
+            <button id="resetCtrl">重置数组</button>
+        </div>
+
+        <div class="state-tip" id="tipText">
+            点击「开始排序演示」，完整查看归并拆分、比较、合并全过程
+        </div>
+
+        <div class="grid-panel">
+            <div class="single-block">
+                <p class="block-title">原始数组</p>
+                <div class="array-box" id="sourceArrBox"></div>
+            </div>
+
+            <div class="single-block">
+                <p class="block-title">左分段数组</p>
+                <div class="arr-holder">
+                    <div class="array-box" id="leftArrBox"></div>
+                    <div class="arrow-mark" id="leftArrow">👆</div>
+                </div>
+            </div>
+
+            <div class="single-block">
+                <p class="block-title">右分段数组</p>
+                <div class="arr-holder">
+                    <div class="array-box" id="rightArrBox"></div>
+                    <div class="arrow-mark" id="rightArrow">👆</div>
+                </div>
+            </div>
+
+            <div class="single-block">
+                <p class="block-title">合并结果区</p>
+                <div class="array-box" id="mergeArrBox"></div>
+            </div>
+        </div>
+
+        <div class="log-container">
+            <div class="log-head">运行操作日志</div>
+            <div id="logPanel"></div>
+        </div>
+    </div>
+
+    <script>
+        // 全局配置常量
+        const CONFIG = {
+            originData: [5, 2, 9, 1, 5, 6, 3],
+            stepDelay: 820,
+            miniDelay: 400
+        };
+        let rawData = [...CONFIG.originData];
+        let runningFlag = false;
+
+        // 页面加载初始化
+        window.onload = function () {
+            renderSourceData();
+            clearLogPanel();
+            resetAllSubBox();
+        };
+
+        // 渲染原始数组
+        function renderSourceData() {
+            const box = document.getElementById("sourceArrBox");
+            box.innerHTML = "";
+            rawData.forEach(num => {
+                const cell = document.createElement("div");
+                cell.className = "item-cell ori-cell";
+                cell.innerText = num;
+                box.appendChild(cell);
+            });
+        }
+
+        // 重置全部子数组容器
+        function resetAllSubBox() {
+            document.getElementById("leftArrBox").innerHTML = "";
+            document.getElementById("rightArrBox").innerHTML = "";
+            document.getElementById("mergeArrBox").innerHTML = "";
+            document.getElementById("leftArrow").style.left = "-120px";
+            document.getElementById("rightArrow").style.left = "-120px";
+        }
+
+        // 重置整体状态
+        function fullReset() {
+            if (runningFlag) return;
+            rawData = [...CONFIG.originData];
+            renderSourceData();
+            resetAllSubBox();
+            document.getElementById("tipText").innerText = "数组已重置，可重新开始排序演示";
+            clearLogPanel();
+        }
+
+        // 清空日志
+        function clearLogPanel() {
+            document.getElementById("logPanel").innerHTML = '<div class="log-line">等待启动排序流程...</div>';
+        }
+
+        // 新增日志行
+        function appendLog(text) {
+            const logWrap = document.getElementById("logPanel");
+            const line = document.createElement("div");
+            line.className = "log-line";
+            line.innerText = text;
+            logWrap.appendChild(line);
+            logWrap.scrollTop = logWrap.scrollHeight;
+        }
+
+        // 休眠延迟工具
+        function sleep(ms) {
+            return new Promise(res => setTimeout(res, ms));
+        }
+
+        // 渲染分段数组
+        function renderSubArray(boxId, arr, cssClass) {
+            const box = document.getElementById(boxId);
+            box.innerHTML = "";
+            arr.forEach(val => {
+                const cell = document.createElement("div");
+                cell.className = `item-cell ${cssClass}`;
+                cell.innerText = val;
+                box.appendChild(cell);
+            });
+        }
+
+        // 高亮当前对比元素
+        function markCompareCell(boxId, idx, cellType) {
+            const box = document.getElementById(boxId);
+            const cells = box.querySelectorAll(".item-cell");
+            cells.forEach(c => c.classList.remove("active-compare"));
+            if (cells[idx]) cells[idx].classList.add("active-compare");
+            updateArrowPos(boxId, idx, cellType);
+        }
+
+        // 更新箭头指针位置
+        function updateArrowPos(boxId, idx, type) {
+            const boxDom = document.getElementById(boxId);
+            const arrowDom = type === "left" ? document.getElementById("leftArrow") : document.getElementById("rightArrow");
+            const cellList = boxDom.querySelectorAll(".item-cell");
+            if (!cellList[idx]) return;
+            const cellRect = cellList[idx].getBoundingClientRect();
+            const boxRect = boxDom.getBoundingClientRect();
+            const offsetX = cellRect.left - boxRect.left + cellRect.width / 2 - 13;
+            arrowDom.style.left = `${offsetX}px`;
+        }
+
+        // 更新合并区双指针位置
+        function refreshTwoArrow(i, j) {
+            const leftBox = document.getElementById("leftArrBox");
+            const rightBox = document.getElementById("rightArrBox");
+            const leftCells = leftBox.querySelectorAll(".item-cell");
+            const rightCells = rightBox.querySelectorAll(".item-cell");
+            const leftArrow = document.getElementById("leftArrow");
+            const rightArrow = document.getElementById("rightArrow");
+
+            if (leftCells[i - 1]) {
+                const rect = leftCells[i - 1].getBoundingClientRect();
+                const wrapRect = leftBox.getBoundingClientRect();
+                leftArrow.style.left = `${rect.left - wrapRect.left + rect.width / 2 - 13}px`;
+            }
+            if (rightCells[j - 1]) {
+                const rect = rightCells[j - 1].getBoundingClientRect();
+                const wrapRect = rightBox.getBoundingClientRect();
+                rightArrow.style.left = `${rect.left - wrapRect.left + rect.width / 2 - 13}px`;
+            }
+        }
+
+        // 清除全部对比高亮
+        function removeAllCompareMark() {
+            document.querySelectorAll(".item-cell").forEach(c => c.classList.remove("active-compare"));
+        }
+
+        // 合并逻辑
+        async function mergeProcess(leftPart, rightPart) {
+            renderSubArray("leftArrBox", leftPart, "left-cell");
+            renderSubArray("rightArrBox", rightPart, "right-cell");
+            renderSubArray("mergeArrBox", [], "merge-cell");
+            await sleep(CONFIG.stepDelay);
+
+            const output = [];
+            let p1 = 0, p2 = 0;
+            while (p1 < leftPart.length && p2 < rightPart.length) {
+                markCompareCell("leftArrBox", p1, "left");
+                markCompareCell("rightArrBox", p2, "right");
+                const minVal = Math.min(leftPart[p1], rightPart[p2]);
+                document.getElementById("tipText").innerText =
+                    `对比：左[${p1}]=${leftPart[p1]} 右[${p2}]=${rightPart[p2]}，选取较小值 ${minVal}`;
+                appendLog(`对比元素：左${leftPart[p1]} 右${rightPart[p2]}，存入 ${minVal}`);
+                await sleep(CONFIG.stepDelay);
+
+                if (leftPart[p1] <= rightPart[p2]) {
+                    output.push(leftPart[p1]);
+                    p1++;
+                } else {
+                    output.push(rightPart[p2]);
+                    p2++;
+                }
+                renderSubArray("mergeArrBox", output, "merge-cell");
+                refreshTwoArrow(p1, p2);
+                await sleep(CONFIG.miniDelay);
+            }
+
+            // 处理左数组剩余
+            while (p1 < leftPart.length) {
+                document.getElementById("tipText").innerText = `左数组剩余元素，存入 ${leftPart[p1]}`;
+                appendLog(`左分段剩余，追加数值 ${leftPart[p1]}`);
+                output.push(leftPart[p1]);
+                p1++;
+                renderSubArray("mergeArrBox", output, "merge-cell");
+                refreshTwoArrow(p1, p2);
+                await sleep(CONFIG.miniDelay);
+            }
+            // 处理右数组剩余
+            while (p2 < rightPart.length) {
+                document.getElementById("tipText").innerText = `右数组剩余元素，存入 ${rightPart[p2]}`;
+                appendLog(`右分段剩余，追加数值 ${rightPart[p2]}`);
+                output.push(rightPart[p2]);
+                p2++;
+                renderSubArray("mergeArrBox", output, "merge-cell");
+                refreshTwoArrow(p1, p2);
+                await sleep(CONFIG.miniDelay);
+            }
+            removeAllCompareMark();
+            return output;
+        }
+
+        // 递归归并拆分
+        async function splitMerge(arr, l, r) {
+            if (l >= r) return [arr[l]];
+            const mid = Math.floor((l + r) / 2);
+            const sliceAll = arr.slice(l, r + 1);
+            const sliceL = arr.slice(l, mid + 1);
+            const sliceR = arr.slice(mid + 1, r + 1);
+            document.getElementById("tipText").innerText =
+                `分段拆分：[${sliceAll.join(",")}] → 左段[${sliceL.join(",")}] 右段[${sliceR.join(",")}]`;
+            appendLog(`拆分区间 [${sliceAll.join(",")}] 分为左右两段`);
+            await sleep(CONFIG.stepDelay);
+
+            const leftRes = await splitMerge(arr, l, mid);
+            const rightRes = await splitMerge(arr, mid + 1, r);
+            return await mergeProcess(leftRes, rightRes);
+        }
+
+        // 启动排序总流程
+        async function runSortDemo() {
+            if (runningFlag) return;
+            runningFlag = true;
+            document.getElementById("runBtn").disabled = true;
+            resetAllSubBox();
+            appendLog("======== 启动归并排序演示 ========");
+
+            const finalSorted = await splitMerge(rawData, 0, rawData.length - 1);
+            // 完成全部高亮
+            const mergeCells = document.querySelectorAll("#mergeArrBox .item-cell");
+            mergeCells.forEach(c => c.classList.add("final-sort"));
+            document.getElementById("tipText").innerHTML =
+                `<strong>排序完成！</strong> 有序数组：[${finalSorted.join(", ")}]`;
+            appendLog(`排序结束，最终有序数组：[${finalSorted.join(", ")}]`);
+
+            document.getElementById("runBtn").disabled = false;
+            runningFlag = false;
+        }
+
+        // 绑定按钮事件
+        document.getElementById("runBtn").addEventListener("click", runSortDemo);
+        document.getElementById("resetCtrl").addEventListener("click", fullReset);
+    </script>
+</body>
+</html>
